@@ -1,0 +1,208 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <object id="japan" type="image/svg+xml" data="jpn.svg"></object>
+    <form id="form1" action="#">
+        <p>何種類に分類しますか<input type="number" id="num" value="3"></p>
+        <p>人口<input type="checkbox" id="population" value="" size="1"></p>
+        <p>人口密度<input type="checkbox" id="populationPerArea" value="" size="5"></p>
+        <p>人口増加率<input type="checkbox" id="populationAlter" value="" size="5"></p>
+        <p>面積<input type="checkbox" id="Area" value="" size="5"></p>
+        <p>学力<input type="checkbox" id="AcademicAbility" value="" size="5"></p>
+        <p>緯度<input type="checkbox" id="latitude" value="" size="5" checked="checked"></p>
+        <p>経度<input type="checkbox" id="longtitude" value="" size="5" checked="checked"></p>
+        <input type="submit" value="分類" onclick="paint();">
+    </form>
+
+</body>
+<!-- Place your code in the script tag below. You can also use an external .js file -->
+<script>
+    //CSVファイルを読み込む関数getCSV()の定義
+    var japanData = []
+
+    function getCSV() {
+        var req = new XMLHttpRequest(); // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成
+        req.open("get", "japanData2.csv", true); // アクセスするファイルを指定
+        req.send(null); // HTTPリクエストの発行
+        var result = [];
+        // レスポンスが返ってきたらconvertCSVtoArray()を呼ぶ	
+        req.onload = function() {
+            japanData = convertCSVtoArray(req.responseText); // 渡されるのは読み込んだCSVデータ
+        }
+    }
+
+    // 読み込んだCSVデータを二次元配列に変換する関数convertCSVtoArray()の定義
+    function convertCSVtoArray(str) { // 読み込んだCSVデータが文字列として渡される
+        var result = []; // 最終的な二次元配列を入れるための配列
+        var tmp = str.split("\n"); // 改行を区切り文字として行を要素とした配列を生成
+
+        // 各行ごとにカンマで区切った文字列を要素とした二次元配列を生成
+        for (var i = 0; i < tmp.length; ++i) {
+            result[i] = tmp[i].split(',');
+        }
+        // alert(result[1])
+        return result;
+        // 300yen
+    }
+
+    getCSV();
+
+    //japanData[0][0] = Number(japanData[0][0])
+    const perfectureJMs = ["NAGASAKI", "FUKUOKA", "SAGA", "KUMAMOTO", "MIYAZAKI", "OOITA", "KAGOSHIMA", "OKINAWA", "EHIME", "KOUCHI", "TOKUSHIMA", "KAGAWA", "YAMAGUCHI", "HIROSHIMA", "OKAYAMA", "TOTTORI", "SHIMANE", "HYOGO", "KYOTO", "OSAKA", "WAKAYAMA", "NARA", "SHIGA", "MIE", "HUKUI", "ISHIKAWA", "TOYAMA", "GUFU", "AICHI", "NAGANO", "SIZUOKA", "NIIGATA", "YAMANASHI", "KANAGAWA", "TOKYO", "SAITAMA", "GUNMA", "TOCHIGI", "CHIBA", "IBARAKI", "FUKUSHIMA", "MIYAGI", "YAMAGATA", "IWATE", "AKITA", "AOMORI", "HOKKAIDO"];
+    const DataMaxMin = [
+        [4.046540449, 4.666134561, 2.572345835, 6.533765547, 2.731498573, 1.144375737, 0.39632571],
+        [-0.781897603, -0.496291554, -2.018803061, -0.510166707, -1.510795288, -1.366068483, -0.624266622]
+    ]
+
+    function paint() {
+        japanData = japanData.map(res => {
+            return res.map(res2 => {
+                return Number(res2)
+            })
+        })
+        const num = document.getElementById("num").value;
+        var learningData = japanData.map(res => {
+            var tmp = [];
+            if (document.getElementById("population").checked) {
+                tmp.push(res[0]);
+            }
+            if (document.getElementById("populationAlter").checked) {
+                tmp.push(res[2]);
+            }
+            if (document.getElementById("populationPerArea").checked) {
+                tmp.push(res[1]);
+            }
+            if (document.getElementById("Area").checked) {
+                tmp.push(res[3]);
+            }
+            if (document.getElementById("latitude").checked) {
+                tmp.push(res[5]);
+            }
+            if (document.getElementById("longtitude").checked) {
+                tmp.push(res[6]);
+            }
+            return tmp;
+        });
+        const learningDataMaxMin = DataMaxMin.map(res => {
+            var tmp = [];
+            if (document.getElementById("population").checked) {
+                tmp.push(res[0]);
+            }
+            if (document.getElementById("populationAlter").checked) {
+                tmp.push(res[2]);
+            }
+            if (document.getElementById("populationPerArea").checked) {
+                tmp.push(res[1]);
+            }
+            if (document.getElementById("Area").checked) {
+                tmp.push(res[3]);
+            }
+            if (document.getElementById("AcademicAbility").checked) {
+                tmp.push(res[4]);
+            }
+            if (document.getElementById("latitude").checked) {
+                tmp.push(res[5]);
+            }
+            if (document.getElementById("longtitude").checked) {
+                tmp.push(res[6]);
+            }
+            return tmp;
+        });
+        const paramNum = learningData[0].length;
+        console.log("num" + num + "paramNum" + paramNum)
+        var clusResult = new Array(47);
+        clusResult.fill(0);
+        var meanPoint = [];
+        for (var i = 0; i < num; i++) {
+            var tmp = [];
+            for (var j = 0; j < paramNum; j++) {
+                tmp.push(Math.random() * (learningDataMaxMin[0][j] - learningDataMaxMin[1][j]) + learningDataMaxMin[1][j])
+            }
+            meanPoint.push(tmp);
+        }
+        // console.log(learningData[40]);
+        var check = true;
+        var count = 0;
+        while (check && count < 100) {
+            count++;
+            check = false;
+            for (var j = 0; j < 47; j++) {
+                var minDistance = 10000;
+                var minDisClass = 0;
+                for (var i = 0; i < num; i++) {
+                    var distance = 0;
+                    meanPoint[i].forEach(function(elm, index) {
+                        distance += (elm - learningData[j][index]) ** 2;
+                    });
+                    // console.log("dis" + distance)
+                    distance = distance ** (1 / 2);
+                    if (minDistance > distance) {
+                        minDistance = distance;
+                        minDisClass = i;
+                    }
+                    // console.log("mindis" + minDistance)
+                }
+                if (minDisClass != clusResult[j]) {
+                    check = true;
+                    clusResult[j] = minDisClass;
+                }
+            }
+            console.log(clusResult);
+            meanPoint = meanPoint.map(res => {
+                return res.fill(0);
+            })
+
+            var classCount = new Array(5);
+            classCount.fill(0);
+
+            for (var i = 0; i < 47; i++) {
+                for (var j = 0; j < paramNum; j++) {
+                    // if (clusResult[i] > 0) {
+                    //     console.log("mea" + meanPoint[clusResult[i]][j]);
+                    //     console.log("lear" + learningData[i][j]);
+                    // }
+                    meanPoint[clusResult[i]][j] += learningData[i][j];
+                }
+                //console.log(classCount[clusResult[i]]);
+                classCount[clusResult[i]] += 1;
+            }
+            console.log(classCount);
+            //console.log(classCount[1]);
+
+            for (var j = 0; j < num; j++) {
+                // console.log(meanPoint[j]);
+                meanPoint[j] = meanPoint[j].map(res => {
+                    return res / classCount[j];
+                })
+            }
+            console.log(meanPoint);
+        }
+        alert(count);
+        var svg = document.getElementById('japan').contentDocument;
+        for (var j = 0; j < learningData.length; j++) {
+            var svgRed = svg.getElementById(perfectureJMs[j]);
+            switch (clusResult[j]) {
+                case 0:
+                    svgRed.setAttribute("fill", "red");
+                    break;
+                case 1:
+                    svgRed.setAttribute("fill", "blue");
+                    break;
+                case 2:
+                    svgRed.setAttribute("fill", "green");
+                    break;
+                case 3:
+                    svgRed.setAttribute("fill", "yellow");
+                    break;
+                case 4:
+                    svgRed.setAttribute("fill", "white");
+                    break;
+            }
+        }
+    }
+</script>
+
+</html>
