@@ -1,8 +1,5 @@
 <html>
 
-<head>
-</head>
-
 <body>
     <object id="japan" type="image/svg+xml" data="jpn.svg"></object>
     <form id="form1" action="#">
@@ -16,7 +13,6 @@
         <p>経度<input type="checkbox" id="longtitude" value="" size="5" checked="checked"></p>
         <input type="submit" value="分類" onclick="paint();">
     </form>
-
 </body>
 <!-- Place your code in the script tag below. You can also use an external .js file -->
 <script>
@@ -58,12 +54,13 @@
     ]
 
     function paint() {
+        const num = Number(document.getElementById("num").value);
         japanData = japanData.map(res => {
             return res.map(res2 => {
                 return Number(res2)
             })
         })
-        const num = document.getElementById("num").value;
+
         var learningData = japanData.map(res => {
             var tmp = [];
             if (document.getElementById("population").checked) {
@@ -113,78 +110,100 @@
         });
         const paramNum = learningData[0].length;
         console.log("num" + num + "paramNum" + paramNum)
-        var clusResult = new Array(47);
-        clusResult.fill(0);
-        var meanPoint = [];
-        for (var i = 0; i < num; i++) {
-            var tmp = [];
-            for (var j = 0; j < paramNum; j++) {
-                tmp.push(Math.random() * (learningDataMaxMin[0][j] - learningDataMaxMin[1][j]) + learningDataMaxMin[1][j])
-            }
-            meanPoint.push(tmp);
-        }
-        // console.log(learningData[40]);
-        var check = true;
-        var count = 0;
-        while (check && count < 100) {
-            count++;
-            check = false;
-            for (var j = 0; j < 47; j++) {
-                var minDistance = 10000;
-                var minDisClass = 0;
-                for (var i = 0; i < num; i++) {
-                    var distance = 0;
-                    meanPoint[i].forEach(function(elm, index) {
-                        distance += (elm - learningData[j][index]) ** 2;
-                    });
-                    // console.log("dis" + distance)
-                    distance = distance ** (1 / 2);
-                    if (minDistance > distance) {
-                        minDistance = distance;
-                        minDisClass = i;
-                    }
-                    // console.log("mindis" + minDistance)
-                }
-                if (minDisClass != clusResult[j]) {
-                    check = true;
-                    clusResult[j] = minDisClass;
-                }
-            }
-            console.log(clusResult);
-            meanPoint = meanPoint.map(res => {
-                return res.fill(0);
-            })
 
-            var classCount = new Array(5);
-            classCount.fill(0);
-
-            for (var i = 0; i < 47; i++) {
+        var OuutpuclusResult = new Array(47);
+        OuutpuclusResult.fill(0);
+        var evaluteResult = 0;
+        for (k = 0; k < 100; k++) {
+            var clusResult = new Array(47);
+            clusResult.fill(0);
+            var meanPoint = [];
+            for (var i = 0; i < num; i++) {
+                var tmp = [];
                 for (var j = 0; j < paramNum; j++) {
-                    // if (clusResult[i] > 0) {
-                    //     console.log("mea" + meanPoint[clusResult[i]][j]);
-                    //     console.log("lear" + learningData[i][j]);
-                    // }
-                    meanPoint[clusResult[i]][j] += learningData[i][j];
+                    tmp.push(Math.random() * (learningDataMaxMin[0][j] - learningDataMaxMin[1][j]) + learningDataMaxMin[1][j])
                 }
-                //console.log(classCount[clusResult[i]]);
-                classCount[clusResult[i]] += 1;
+                meanPoint.push(tmp);
             }
-            console.log(classCount);
-            //console.log(classCount[1]);
-
-            for (var j = 0; j < num; j++) {
-                // console.log(meanPoint[j]);
-                meanPoint[j] = meanPoint[j].map(res => {
-                    return res / classCount[j];
+            // console.log(learningData[40]);
+            var check = true;
+            var count = 0;
+            while (check && count < 100) {
+                count++;
+                check = false;
+                for (var j = 0; j < 47; j++) {
+                    var minDistance = 10000;
+                    var minDisClass = 0;
+                    for (var i = 0; i < num; i++) {
+                        var distance = 0;
+                        meanPoint[i].forEach(function(elm, index) {
+                            distance += (elm - learningData[j][index]) ** 2;
+                        });
+                        // console.log("dis" + distance)
+                        distance = distance ** (1 / 2);
+                        if (minDistance > distance) {
+                            minDistance = distance;
+                            minDisClass = i;
+                        }
+                        // console.log("mindis" + minDistance)
+                    }
+                    if (minDisClass != clusResult[j]) {
+                        check = true;
+                        clusResult[j] = minDisClass;
+                    }
+                }
+                //console.log(clusResult);
+                meanPoint = meanPoint.map(res => {
+                    return res.fill(0);
                 })
+
+                var classCount = new Array(5);
+                classCount.fill(0);
+
+                for (var i = 0; i < 47; i++) {
+                    for (var j = 0; j < paramNum; j++) {
+                        // if (clusResult[i] > 0) {
+                        //     console.log("mea" + meanPoint[clusResult[i]][j]);
+                        //     console.log("lear" + learningData[i][j]);
+                        // }
+                        meanPoint[clusResult[i]][j] += learningData[i][j];
+                    }
+                    //console.log(classCount[clusResult[i]]);
+                    classCount[clusResult[i]] += 1;
+                }
+                //console.log(classCount);
+                //console.log(classCount[1]);
+
+                for (var j = 0; j < num; j++) {
+                    // console.log(meanPoint[j]);
+                    meanPoint[j] = meanPoint[j].map(res => {
+                        return res / classCount[j];
+                    })
+                }
+                // console.log(meanPoint);
             }
-            console.log(meanPoint);
+            //console.log(clusResult);
+            var clusCount = [...Array(num)].map((v, i) => i)
+
+            clusCount = clusCount.map(v => {
+                return clusResult.filter(v2 => {
+                    return v2 == v
+                }).length
+            });
+            // console.log(clusCount);
+            const evaluteResult_tmp = clusCount.reduce((accumulator, currentValue, currentIndex, array) => {
+                return accumulator + currentValue;
+            });
+            // console.log(evaluteResult_tmp);
+            if (evaluteResult_tmp > evaluteResult)
+                OuutpuclusResult = clusResult.slice();
+
         }
-        alert(count);
+        //alert(count);
         var svg = document.getElementById('japan').contentDocument;
         for (var j = 0; j < learningData.length; j++) {
             var svgRed = svg.getElementById(perfectureJMs[j]);
-            switch (clusResult[j]) {
+            switch (OuutpuclusResult[j]) {
                 case 0:
                     svgRed.setAttribute("fill", "red");
                     break;
